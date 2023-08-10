@@ -31,7 +31,7 @@ requirements = read_multiline_as_list("requirements.txt")
 
 setuptools.setup(
     name="kittychat",
-    version="v0.1.0",#get_version(),
+    version=get_version(),
     author="TeiaLabs",
     author_email="contato@teialabs.com",
     description="The cat's meow in AI conversation management.",
