@@ -22,7 +22,10 @@ class MessageDropper:
             raise InvalidModel(self.tokenizer.model)
 
     def run(
-        self, thread: Chat, functions: Optional[list[dict]] = None
+        self,
+        thread: Chat,
+        functions: Optional[list[dict]] = None,
+        desired_max_tokens: int = 50,
     ) -> Chat:
         """
         Drop enough messages so the token count is below the model's maximum.
@@ -36,6 +39,7 @@ class MessageDropper:
         index = 1 if thread[0]["role"] == "system" else 0
         while (
             token_count := self.tokenizer.count_chatml_tokens(thread, functions)
+            + desired_max_tokens
         ) > self.model_info.max_tokens:
             logger.debug(
                 "Thread has %d tokens, which is more than the maximum of %d",
@@ -55,10 +59,16 @@ class MessageDropper:
         logger.debug("Finished running MessageDropper on thread: %s", len(thread))
         return thread
 
-    def check_thread_length(self, thread: Chat, functions: Optional[list[dict]] = None) -> tuple[int, int, bool]:
+    def check_thread_length(
+        self,
+        thread: Chat,
+        functions: Optional[list[dict]] = None,
+        desired_max_tokens: int = 50,
+    ) -> tuple[int, int, bool]:
         """
         Check if a thread is too big for the model.
         """
         thread_length = self.tokenizer.count_chatml_tokens(thread, functions)
+        thread_length += desired_max_tokens
         toobig = thread_length > self.model_info.max_tokens
         return thread_length, self.model_info.max_tokens, toobig
