@@ -1,1 +1,1 @@
-totokenizers
+totokenizers>=1.0.2
