@@ -2,10 +2,11 @@
 Drop old messages from a thread if the thread is too long.
 
 """
+
 import logging
 from typing import Optional
 
-from totokenizers.factories import TotoModelInfo, Totokenizer
+from totokenizers.factories import Totokenizer, TotoModelInfo
 from totokenizers.model_info import ChatModelInfo
 from totokenizers.schemas import Chat
 
@@ -34,13 +35,13 @@ class MessageDropper:
         """
         logger.info("Running MessageDropper on thread: %s", len(thread))
         thread = thread.copy()
-        if len(thread) == 0:
+        if len(thread) == 0 or not desired_max_tokens:
             return thread
+
         index = 1 if thread[0]["role"] == "system" else 0
-        while (
-            token_count := self.tokenizer.count_chatml_tokens(thread, functions)
-            + desired_max_tokens
-        ) > self.model_info.max_tokens:
+        thread_tokens = self.tokenizer.count_chatml_tokens(thread, functions)
+        token_count = thread_tokens + desired_max_tokens
+        while token_count > self.model_info.max_tokens:
             logger.debug(
                 "Thread has %d tokens, which is more than the maximum of %d",
                 token_count,
@@ -56,6 +57,9 @@ class MessageDropper:
                     continue
             logger.debug("Dropping message: %s", thread[1])
             thread.pop(index)
+            thread_tokens = self.tokenizer.count_chatml_tokens(thread, functions)
+            token_count = thread_tokens + desired_max_tokens
+
         logger.debug("Finished running MessageDropper on thread: %s", len(thread))
         return thread
 
